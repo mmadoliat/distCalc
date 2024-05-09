@@ -47,13 +47,26 @@ server <- function(input, output) {
 
 
     new_distribution <- data.frame(name = dist_name, pdf = pdf_function, cdf = cdf_function, lower = lower_bound, upper = upper_bound)
-    if (file.exists("custom_distributions.csv")) {
-      custom_distributions <- read.csv("custom_distributions.csv")
-      custom_distributions <- bind_rows(custom_distributions, new_distribution)
+    # if (file.exists("custom_distributions.csv")) {
+    #   custom_distributions <- read.csv("custom_distributions.csv")
+    #   custom_distributions <- bind_rows(custom_distributions, new_distribution)
+    # } else {
+    #   custom_distributions <- new_distribution
+    # }
+    # write.csv(custom_distributions, "custom_distributions.csv", row.names = FALSE)
+    if (file.exists("custom_distributions.rds")) {
+      # Read existing data from RDS file
+      custom_distributions <- readRDS("custom_distributions.rds")
+      # Bind new data with existing data
+      custom_distributions <- rbind(custom_distributions, new_distribution)
     } else {
+      # If no file exists, start with the new data
       custom_distributions <- new_distribution
     }
-    write.csv(custom_distributions, "custom_distributions.csv", row.names = FALSE)
+
+    # Save the updated data frame to an RDS file
+    saveRDS(custom_distributions, "custom_distributions.rds")
+    output$status <- renderText("Data saved successfully.")
   })
 
   compute_hazard <- function(x, pdf_func, cdf_func) {
