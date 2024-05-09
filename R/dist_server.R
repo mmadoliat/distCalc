@@ -1,62 +1,47 @@
-library(shiny)
-library(dplyr) # Assuming dplyr is used for some data manipulation in the custom calculator
+library(ggplot2)
+dist_server<-function(input, output){
+  # Persistence for user-defined distribution
+  user_dist <- reactiveValues(density = NULL, cdf = NULL, hazard = NULL)
 
-# Define UI
-ui <- fluidPage(
-  tabsetPanel(
-    tabPanel("Distribution Calculator",
-             fluidPage(
-               tags$head(tags$style(HTML("body { max-width: 1250px !important; }"))),
-               headerPanel("Distribution Calculator"),
-               sidebarPanel(
-                 width=3,
-                 tags$head(tags$style(type="text/css", ".well { max-width: 250px; }")),
-                 selectInput("type","Type: ", choices = c("Continuous" = "cont", "Discrete" = "disc")),
-                 uiOutput("dist"),
-                 uiOutput("p1"),
-                 uiOutput("p2"),
-                 uiOutput("p3"),
-                 selectInput("fun", "Function: ", choices = c("Probability function" = "prob", "Quantile function" = "quantile")),
-                 uiOutput("prob"),
-                 uiOutput("a"),
-                 uiOutput("q")
-               ),
-               mainPanel(
-                 width=9,
-                 tags$style(type="text/css", ".shiny-output-error { visibility: hidden; }",".shiny-output-error:before { visibility: hidden; }"),
-                 uiOutput("g.choice"),
-                 uiOutput("area", align = "center", style="font-size:170%;"),
-                 plotOutput("plot")
-               )
-             )
-    ),
-    tabPanel("Custom Calculator",
-             fluidPage(
-               titlePanel("Custom Distribution App"),
-               sidebarLayout(
-                 sidebarPanel(
-                   textInput("dist_name", "Distribution Name", ""),
-                   textAreaInput("pdf_input", "PDF Function", ""),
-                   textAreaInput("cdf_input", "CDF Function", ""),
-                   textAreaInput("hazard_input", "Hazard Function", ""),
-                   numericInput("lower_bound", "Lower Bound", 0),
-                   numericInput("upper_bound", "Upper Bound", 1),
-                   actionButton("save_button", "Save Distribution")
-                 ),
-                 mainPanel(
-                   plotOutput("pdf_plot"),
-                   plotOutput("cdf_plot"),
-                   plotOutput("hazard_plot")
-                 )
-               )
-             )
-    )
-  )
-)
+  # Render UI for user-defined distribution
+  observeEvent(input$plot_button_custom, {
+    output$distribution_plot <- renderPlot({
+      # Check if all necessary inputs are provided
+      if (is.null(input$density_function) ||
+          is.null(input$cdf_function) ||
+          is.null(input$hazard_function)) {
+        return(NULL)
+      }
 
-# Define server logic
-server <- function(input, output, session) {
-  # Server logic for Distribution Calculator
+      # Convert user input strings to functions
+      f <- function(x) eval(parse(text = input$density_function))
+      F <- function(x) eval(parse(text = input$cdf_function))
+      h <- function(x) eval(parse(text = input$hazard_function))
+
+      # Generate data for plotting
+      x <- seq(input$lower_bound, input$upper_bound, length.out = 1000)
+      density <- f(x)
+      cdf <- F(x)
+      hazard <- h(x)
+
+      # Plotting
+      p <- ggplot() +
+        geom_line(aes(x, density, color = "Density")) +
+        geom_line(aes(x, cdf, color = "CDF")) +
+        geom_line(aes(x, hazard, color = "Hazard")) +
+        labs(x = "x", y = "Value", title = "Custom Distribution") +
+        scale_color_manual(values = c("Density" = "red", "CDF" = "blue", "Hazard" = "green")) +
+        theme_minimal()
+
+      print(p)
+    })
+
+    # Save user-defined distribution for persistence
+    user_dist$density <- input$density_function
+    user_dist$cdf <- input$cdf_function
+    user_dist$hazard <- input$hazard_function
+  })
+  ####### Below for the original distribution
   d.dist = function(x) {
     if (input$dist=="norm") dnorm(x, input$p1, input$p2)
     else if (input$dist=="t") dt(x, input$p1)
@@ -73,6 +58,9 @@ server <- function(input, output, session) {
     else if (input$dist=="geom") dgeom(x, input$p1)
     else if (input$dist=="nbinom") dnbinom(x, input$p1, input$p2)
     else if (input$dist=="hyper") dhyper(x, input$p1, input$p2, input$p3)
+    ### Adding
+    else if (input$dist == "lognorm") dlnorm(x, input$p1, input$p2)
+    else if (input$dist == "bernoulli") dbern(x, input$p1)
   }
 
   p.dist = function(x) {
@@ -91,6 +79,9 @@ server <- function(input, output, session) {
     else if (input$dist=="geom") pgeom(x, input$p1)
     else if (input$dist=="nbinom") pnbinom(x, input$p1, input$p2)
     else if (input$dist=="hyper") phyper(x, input$p1, input$p2, input$p3)
+    ### Adding
+    else if (input$dist == "lognorm") plnorm(x, input$p1, input$p2)
+    else if (input$dist == "bernoulli") pbern(x, input$p1)
   }
 
   q.dist = function(q) {
@@ -109,6 +100,9 @@ server <- function(input, output, session) {
     else if (input$dist=="geom") qgeom(q, input$p1)
     else if (input$dist=="nbinom") qnbinom(q, input$p1, input$p2)
     else if (input$dist=="hyper") qhyper(q, input$p1, input$p2, input$p3)
+    ### Adding
+    else if (input$dist == "lognorm") qlnorm(q, input$p1, input$p2)
+    else if (input$dist == "bernoulli") qbern(q, input$p1)
   }
 
   r.dist = function(n) {
@@ -127,6 +121,9 @@ server <- function(input, output, session) {
     else if (input$dist=="geom") rgeom(n, input$p1)
     else if (input$dist=="nbinom") rnbinom(n, input$p1, input$p2)
     else if (input$dist=="hyper") rhyper(n, input$p1, input$p2, input$p3)
+    ### Adding
+    else if (input$dist == "lognorm") rlnorm(n, input$p1, input$p2)
+    else if (input$dist == "bernoulli") rbern(n, input$p1)
   }
 
   h.dist = function(x) { d.dist(x)/(1-p.dist(x)) }
@@ -134,8 +131,8 @@ server <- function(input, output, session) {
   output$dist <- renderUI({
     if (is.null(input$type)) return()
     switch(input$type,
-           "cont" = selectInput("dist", "Distribution: ", choices = c(`Normal` = "norm", `t` = "t", `Chi-Squared` = "chisq", `F` = "f", `Uniform` = "unif", `Beta` = "beta", `Exponential` = "exp", `Gamma` = "gamma", `Weibull` = "weibull", `Skew Normal` = "sn"), selected = "norm"),
-           "disc" = selectInput("dist", "Distribution: ", choices = c(`Binomial` = 'binom', `Poisson` = 'pois', `Geometric` = 'geom', `Negative Binomial` = 'nbinom', `Hypergeometric` = 'hyper'), selected = "binom"))
+           "cont" = selectInput("dist", "Distribution: ", choices = c(`Normal` = "norm", `t` = "t", `Chi-Squared` = "chisq", `F` = "f", `Uniform` = "unif", `Beta` = "beta", `Exponential` = "exp", `Gamma` = "gamma", `Weibull` = "weibull", `Skew Normal` = "sn",`Log Normal` = "lognorm"), selected = "norm"),
+           "disc" = selectInput("dist", "Distribution: ", choices = c(`Binomial` = 'binom', `Poisson` = 'pois', `Geometric` = 'geom', `Negative Binomial` = 'nbinom', `Hypergeometric` = 'hyper',`Bernoulli` = "bernoulli"), selected = "binom"))
   })
 
   output$p1 = renderUI(
@@ -154,6 +151,9 @@ server <- function(input, output, session) {
       else if (input$dist == "geom") {numericInput("p1", "p: ", min = 0.1, max = 1, value=0.5, step=0.1)}
       else if (input$dist == "nbinom") {numericInput("p1", "size: ", min = 1, value=10)}
       else if (input$dist == "hyper") {numericInput("p1", "m (the number of white balls in the urn): ", min=1, value=10)}
+      ### Adding
+      else if (input$dist == "lognorm") {numericInput("p1", "logMean: ", value=0)}
+      else if (input$dist == "bernoulli") {numericInput("p1", "p: ", min = 0.1, max = 1, value=0.5, step=0.1)}
     })
 
   output$p2 = renderUI(
@@ -168,6 +168,8 @@ server <- function(input, output, session) {
       else if (input$dist == "binom") {numericInput("p2", "p: ", min = 0.1, max = 1, value=.5, step=0.1)}
       else if (input$dist == "nbinom") {numericInput("p2", "p: ", min = 0.1, max = 1, value=.5, step=0.1)}
       else if (input$dist == "hyper") {numericInput("p2", "n (the number of black balls in the urn): ", min = 1, value=10)}
+      ### Adding
+      else if (input$dist == "lognorm") {numericInput("p2", "Standard Deviation: ", min = 0.1, value = 1, step=0.1)}
     })
 
   output$p3 = renderUI(
@@ -244,58 +246,4 @@ server <- function(input, output, session) {
     if (input$type == "disc") {DplotGraph(x, lower = q.dist(0.00125), upper = q.dist(0.99875), header = input$dist)}
   })
 
-  # Server logic for Custom Calculator
-  observeEvent(input$save_button, {
-    # Extract inputs
-    dist_name <- isolate(input$dist_name)
-    pdf_function <- isolate(input$pdf_input)
-    cdf_function <- isolate(input$cdf_input)
-    hazard_function <- isolate(input$hazard_input)
-    lower_bound <- isolate(input$lower_bound)
-    upper_bound <- isolate(input$upper_bound)
-
-    # Save distribution parameters to CSV file
-    new_distribution <- data.frame(name = dist_name, pdf = pdf_function, cdf = cdf_function, hazard = hazard_function, lower = lower_bound, upper = upper_bound)
-    if (file.exists("custom_distributions.csv")) {
-      custom_distributions <- read.csv("custom_distributions.csv")
-      custom_distributions <- bind_rows(custom_distributions, new_distribution)
-    } else {
-      custom_distributions <- new_distribution
-    }
-    write.csv(custom_distributions, "custom_distributions.csv", row.names = FALSE)
-  })
-
-  output$pdf_plot <- renderPlot({
-    x <- seq(input$lower_bound, input$upper_bound, length.out = 100)
-    y <- eval(parse(text = input$pdf_input))
-    ggplot(data.frame(x, y), aes(x, y)) +
-      geom_line(color = "blue") +
-      geom_area(fill = "skyblue", alpha = 0.5) +
-      labs(title = "PDF", x = "x", y = "pdf") +
-      theme_minimal()
-  })
-
-  output$cdf_plot <- renderPlot({
-    x <- seq(input$lower_bound, input$upper_bound, length.out = 100)
-    y <- eval(parse(text = input$cdf_input))
-    ggplot(data.frame(x, y), aes(x, y)) +
-      geom_line(color = "blue") +
-      geom_area(fill = "skyblue", alpha = 0.5) +
-      geom_hline(yintercept = 0.5, linetype = "dashed", color = "red") +
-      labs(title = "CDF", x = "x", y = "cdf") +
-      theme_minimal()
-  })
-
-  output$hazard_plot <- renderPlot({
-    x <- seq(input$lower_bound, input$upper_bound, length.out = 100)
-    y <- eval(parse(text = input$hazard_input))
-    ggplot(data.frame(x, y), aes(x, y)) +
-      geom_line(color = "blue") +
-      geom_area(fill = "skyblue", alpha = 0.5) +
-      labs(title = "Hazard Function", x = "x", y = "hazard") +
-      theme_minimal()
-  })
 }
-
-# Run the application
-shinyApp(ui = ui, server = server)

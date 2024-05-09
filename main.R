@@ -1,8 +1,10 @@
-library(distcalc)
-distCalc()
-customCalc()
+#devtools::document()
 
-setwd("~/R/distcalc/R")
+library(distCalc)
+user_app()
+dist_app()
+
+setwd("~/R/distCalc/R")
 # Get the custom distribution named "Exponential Distribution"
 custom_dist <- get_custom_dist("Donny")
 
