@@ -1,4 +1,5 @@
-#devtools::document()
+# Comment if there is no change in Package
+devtools::document()
 
 library(distCalc)
 user_app()
@@ -27,7 +28,7 @@ normalDist <- createDistribution(
   name = "Normal Distribution",
   density_func = "dnorm(x, mean=0, sd=1)",
   cdf_func = "pnorm(x, mean=0, sd=1)",
-  hazard_func = NA,
+  hazard_func = "dnorm(x, mean=0, sd=1)/(1-pnorm(x, mean=0, sd=1))",
   type = "Continuous"
 )
 print(normalDist$getInfo())
