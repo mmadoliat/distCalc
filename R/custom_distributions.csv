@@ -1,12 +1,2 @@
-"pdf","cdf","hazard","name","lower","upper","type"
-"dexp(x, rate = 1)","pexp(x, rate = 1)","dexp(x, rate = 1) / (1 - pexp(x, rate = 1))",NA,NA,NA,NA
-"dexp(x, rate = 1)","pexp(x, rate = 1)","dexp(x, rate = 1) / (1 - pexp(x, rate = 1))","exp",NA,NA,NA
-"dexp(x, rate = 1)","pexp(x, rate = 1)","dexp(x, rate = 1) / (1 - pexp(x, rate = 1))","test",NA,NA,NA
-"dnorm(x)","pnorm(x)","dnorm(x) / (1 - pnorm(x))","normal",-3,3,NA
-"dnorm(x)","pnorm(x)","dnorm(x) / (1 - pnorm(x))","test2",-3,3,NA
-"dnorm(x)","pnorm(x)",NA,"test3",-3,3,NA
-"dnorm(x, mean=0, sd=1)","pexp(x, rate = 1)",NA,"healthcare",-3,3,NA
-"dnorm(x, mean=0, sd=1)","pnorm(x, mean=0, sd=1)",NA,"hello",0,3,NA
-"dnorm(x, mean=0, sd=1)","pnorm(x, mean=0, sd=1)",NA,"hey",-3,3,NA
-"dnorm(x, mean=0, sd=1)","pexp(x, rate = 1)",NA,"hello2",0,1,NA
-"5","pexp(x, rate = 1)",NA,"Donny",0,3,NA
+"name","pdf","cdf","lower","upper"
+"Donny","dexp(x,1)","pexp(x,1)",0,1
